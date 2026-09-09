@@ -1,1 +1,54 @@
+name: Build Khata APK
 
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.7'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Extract Khata project
+        run: |
+          mkdir workspace
+          unzip -q Khata_App.zip -d workspace
+
+      - name: Build APK
+        run: |
+          PROJECT_DIR=$(dirname "$(find workspace -name settings.gradle -o -name settings.gradle.kts | head -n 1)")
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --stacktrace
+
+      - name: Copy APK
+        run: |
+          APK=$(find workspace -path "*/app/build/outputs/apk/debug/app-debug.apk" | head -n 1)
+          cp "$APK" Khata.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Khata-APK
+          path: Khata.apk
