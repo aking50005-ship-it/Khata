@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Khata App</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#222}
+header{background:#1769aa;color:white;padding:18px;text-align:center;font-size:24px;font-weight:bold}
+.container{padding:15px;padding-bottom:80px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 8px #0001}
+.card h3{margin:0 0 8px;font-size:15px}
+.amount{font-size:25px;font-weight:bold}
+.jama{color:#168a45}.udhaar{color:#d33}
+.section{margin-top:18px}
+.section-title{font-size:20px;font-weight:bold;margin-bottom:10px}
+button{border:0;border-radius:10px;padding:12px 15px;font-size:15px;cursor:pointer}
+.primary{background:#1769aa;color:white}
+.green{background:#168a45;color:white}
+.red{background:#d33;color:white}
+input{width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:9px;font-size:16px}
+.customer{background:white;padding:15px;margin:9px 0;border-radius:12px;box-shadow:0 2px 7px #0001}
+.customer-name{font-size:18px;font-weight:bold}
+.balance{margin:7px 0;font-weight:bold}
+nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:9px;box-shadow:0 -2px 8px #0002}
+nav button{background:none;color:#333;font-size:12px;padding:5px}
+.hidden{display:none}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:white;width:100%;max-width:420px;border-radius:15px;padding:20px}
+.row{display:flex;gap:8px}.row button{flex:1}
+.history{border-bottom:1px solid #eee;padding:10px 0}
+small{color:#777}
+</style>
+</head>
+
+<body>
+
+<header>📒 Khata App</header>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="cards">
+    <div class="card">
+      <h3>💰 Total Jama</h3>
+      <div class="amount jama" id="totalJama">Rs 0</div>
+    </div>
+    <div class="card">
+      <h3>💸 Total Udhaar</h3>
+      <div class="amount udhaar" id="totalUdhaar">Rs 0</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">👥 Customers List</div>
+    <button class="primary" onclick="openAddCustomer()">+ Add Customer</button>
+    <div id="customers"></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div id="reports" class="hidden">
+  <div class="section-title">📊 Reports</div>
+  <div class="card">
+    <h3>Daily / Monthly Hisaab</h3>
+    <p>Total Jama: <b id="reportJama">Rs 0</b></p>
+    <p>Total Udhaar: <b id="reportUdhaar">Rs 0</b></p>
+    <p>Total Transactions: <b id="reportTransactions">0</b></p>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="hidden">
+  <div class="section-title">⚙️ Settings</div>
+  <div class="card">
+    <button class="primary" onclick="backup()">💾 Backup</button>
+    <br><br>
+    <button class="green" onclick="restore()">♻️ Restore</button>
+    <br><br>
+    <button onclick="alert('Language: Urdu / English')">🌐 Language</button>
+    <br><br>
+    <button onclick="alert('Khata App Settings')">⚙️ App Settings</button>
+  </div>
+</div>
+
+<!-- CUSTOMER PAGE -->
+<div id="customerPage" class="hidden">
+  <button onclick="showPage('dashboard')">← Back</button>
+  <div class="section-title" id="customerTitle"></div>
+
+  <div class="card">
+    <p>📱 <span id="customerPhone"></span></p>
+    <p>Jama: <b class="jama" id="customerJama">Rs 0</b></p>
+    <p>Udhaar: <b class="udhaar" id="customerUdhaar">Rs 0</b></p>
+    <p>Balance: <b id="customerBalance">Rs 0</b></p>
+
+    <div class="row">
+      <button class="green" onclick="addTransaction('jama')">+ Jama</button>
+      <button class="red" onclick="addTransaction('udhaar')">+ Udhaar</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📜 Transaction History</div>
+    <div id="history"></div>
+  </div>
+</div>
+
+</div>
+
+<nav>
+<button onclick="showPage('dashboard')">🏠<br>Home</button>
+<button onclick="openAddCustomer()">👤<br>Customer</button>
+<button onclick="showPage('reports')">📊<br>Reports</button>
+<button onclick="showPage('settings')">⚙️<br>Settings</button>
+</nav>
+
+<!-- ADD CUSTOMER MODAL -->
+<div id="customerModal" class="modal hidden">
+<div class="modal-box">
+<h2>👤 Add Customer</h2>
+<input id="nameInput" placeholder="Customer Name">
+<input id="phoneInput" placeholder="Phone Number">
+
+<div class="row">
+<button onclick="closeModal()">Cancel</button>
+<button class="primary" onclick="saveCustomer()">Save</button>
+</div>
+</div>
+</div>
+
+<!-- TRANSACTION MODAL -->
+<div id="transactionModal" class="modal hidden">
+<div class="modal-box">
+<h2 id="transactionTitle">Amount</h2>
+<input id="amountInput" type="number" placeholder="Amount">
+<input id="noteInput" placeholder="Note (optional)">
+
+<div class="row">
+<button onclick="closeTransaction()">Cancel</button>
+<button class="primary" onclick="saveTransaction()">Save</button>
+</div>
+</div>
+</div>
+
+<script>
+let customers=JSON.parse(localStorage.getItem("khataCustomers")||"[]");
+let currentCustomer=null;
+let transactionType="";
+
+function money(n){
+ return "Rs "+Number(n||0).toLocaleString();
+}
+
+function saveData(){
+ localStorage.setItem("khataCustomers",JSON.stringify(customers));
+}
+
+function showPage(page){
+ document.getElementById("dashboard").classList.add("hidden");
+ document.getElementById("reports").classList.add("hidden");
+ document.getElementById("settings").classList.add("hidden");
+ document.getElementById("customerPage").classList.add("hidden");
+ document.getElementById(page).classList.remove("hidden");
+
+ if(page==="dashboard") renderCustomers();
+ if(page==="reports") renderReports();
+}
+
+function openAddCustomer(){
+ document.getElementById("customerModal").classList.remove("hidden");
+}
+
+function closeModal(){
+ document.getElementById("customerModal").classList.add("hidden");
+}
+
+function saveCustomer(){
+ let name=document.getElementById("nameInput").value.trim();
+ let phone=document.getElementById("phoneInput").value.trim();
+
+ if(!name){
+  alert("Customer name likhein");
+  return;
+ }
+
+ customers.push({
+  id:Date.now(),
+  name:name,
+  phone:phone,
+  transactions:[]
+ });
+
+ saveData();
+
+ document.getElementById("nameInput").value="";
+ document.getElementById("phoneInput").value="";
+ closeModal();
+ renderCustomers();
+}
+
+function renderCustomers(){
+ let box=document.getElementById("customers");
+ box.innerHTML="";
+
+ let totalJama=0;
+ let totalUdhaar=0;
+
+ customers.forEach(c=>{
+  let jama=c.transactions
+   .filter(t=>t.type==="jama")
+   .reduce((a,t)=>a+Number(t.amount),0);
+
+  let udhaar=c.transactions
+   .filter(t=>t.type==="udhaar")
+   .reduce((a,t)=>a+Number(t.amount),0);
+
+  totalJama+=jama;
+  totalUdhaar+=udhaar;
+
+  let balance=jama-udhaar;
+
+  box.innerHTML+=`
+   <div class="customer" onclick="openCustomer(${c.id})">
+    <div class="customer-name">👤 ${escapeHtml(c.name)}</div>
+    <small>${escapeHtml(c.phone||"")}</small>
+    <div class="balance">
+      Balance: ${money(Math.abs(balance))}
+      ${balance>=0 ? " (Jama)" : " (Udhaar)"}
+    </div>
+   </div>`;
+ });
+
+ document.getElementById("totalJama").innerText=money(totalJama);
+ document.getElementById("totalUdhaar").innerText=money(totalUdhaar);
+}
+
+function openCustomer(id){
+ currentCustomer=customers.find(c=>c.id===id);
+ if(!currentCustomer)return;
+
+ showPage("customerPage");
+ document.getElementById("customerTitle").innerText=
+  "👤 "+currentCustomer.name;
+ document.getElementById("customerPhone").innerText=
+  currentCustomer.phone||"No phone";
+
+ renderCustomer();
+}
+
+function renderCustomer(){
+ let c=currentCustomer;
+
+ let jama=c.transactions
+  .filter(t=>t.type==="jama")
+  .reduce((a,t)=>a+Number(t.amount),0);
+
+ let udhaar=c.transactions
+  .filter(t=>t.type==="udhaar")
+  .reduce((a,t)=>a+Number(t.amount),0);
+
+ document.getElementById("customerJama").innerText=money(jama);
+ document.getElementById("customerUdhaar").innerText=money(udhaar);
+
+ let balance=jama-udhaar;
+ document.getElementById("customerBalance").innerText=
+  money(Math.abs(balance))+(balance>=0?" Jama":" Udhaar");
+
+ let history=document.getElementById("history");
+ history.innerHTML="";
+
+ if(c.transactions.length===0){
+  history.innerHTML="<p>Abhi koi transaction nahi hai.</p>";
+  return;
+ }
+
+ [...c.transactions].reverse().forEach(t=>{
+  history.innerHTML+=`
+   <div class="history">
+    <b>${t.type==="jama"?"🟢 Jama":"🔴 Udhaar"}</b>
+    <strong>${money(t.amount)}</strong><br>
+    <small>${t.note||""} — ${t.date}</small>
+   </div>`;
+ });
+}
+
+function addTransaction(type){
+ transactionType=type;
+ document.getElementById("transactionTitle").innerText=
+  type==="jama" ? "🟢 Jama Amount" : "🔴 Udhaar Amount";
+ document.getElementById("transactionModal").classList.remove("hidden");
+}
+
+function closeTransaction(){
+ document.getElementById("transactionModal").classList.add("hidden");
+}
+
+function saveTransaction(){
+ let amount=Number(document.getElementById("amountInput").value);
+ let note=document.getElementById("noteInput").value;
+
+ if(!amount || amount<=0){
+  alert("Sahi amount likhein");
+  return;
+ }
+
+ currentCustomer.transactions.push({
+  type:transactionType,
+  amount:amount,
+  note:note,
+  date:new Date().toLocaleString()
+ });
+
+ saveData();
+
+ document.getElementById("amountInput").value="";
+ document.getElementById("noteInput").value="";
+
+ closeTransaction();
+ renderCustomer();
+}
+
+function renderReports(){
+ let jama=0,udhaar=0,transactions=0;
+
+ customers.forEach(c=>{
+  c.transactions.forEach(t=>{
+   transactions++;
+   if(t.type==="jama")jama+=Number(t.amount);
+   else udhaar+=Number(t.amount);
+  });
+ });
+
+ document.getElementById("reportJama").innerText=money(jama);
+ document.getElementById("reportUdhaar").innerText=money(udhaar);
+ document.getElementById("reportTransactions").innerText=transactions;
+}
+
+function backup(){
+ let data=JSON.stringify(customers,null,2);
+ let blob=new Blob([data],{type:"application/json"});
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="khata-backup.json";
+ a.click();
+}
+
+function restore(){
+ let input=document.createElement("input");
+ input.type="file";
+ input.accept=".json";
+
+ input.onchange=function(){
+  let file=input.files[0];
+  if(!file)return;
+
+  let reader=new FileReader();
+
+  reader.onload=function(){
+   try{
+    customers=JSON.parse(reader.result);
+    saveData();
+    renderCustomers();
+    alert("Backup restore ho gaya");
+   }catch(e){
+    alert("Backup file ghalat hai");
+   }
+  };
+
+  reader.readAsText(file);
+ };
+
+ input.click();
+}
+
+function escapeHtml(text){
+ return String(text)
+ .replaceAll("&","&amp;")
+ .replaceAll("<","&lt;")
+ .replaceAll(">","&gt;")
+ .replaceAll('"',"&quot;")
+ .replaceAll("'","&#039;");
+}
+
+renderCustomers();
+</script>
+
+</body>
+</html>
